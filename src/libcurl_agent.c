@@ -21,7 +21,7 @@
 #  define debug(...)
 #endif
 
-#define ME "Canary Agent: "
+#define ME "libcurl Agent: "
 
 // Our per-Curl-handle state. We build it up while listening in to
 // setopt calls so we can report the correct stuff.
@@ -54,11 +54,11 @@ static int setup_client_socket_fallback() {
 }
 
 static int setup_client_socket() {
-    char *host_string = getenv("CANARY_MONITORING_AGENT_HOST");
+    char *host_string = getenv("METRIST_AGENT_HOST");
     if (host_string == NULL) {
         host_string = "127.0.0.1";
     }
-    char *port_string = getenv("CANARY_MONITORING_AGENT_PORT");
+    char *port_string = getenv("METRIST_AGENT_PORT");
     if (port_string == NULL) {
         port_string = "51712";
     }

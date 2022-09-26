@@ -63,3 +63,7 @@ sudo apt install build-essential libcurl4-openssl-dev
 
 Invoking `make` will then build the library and run a test suite over the included
 linked list library. The agent is now in your directory as a `.so` file.
+
+Note that the integration test included sends actual data to Orchestrator. If you
+don't have an Orchestrator running on localhost, run `make fake_orch` on a separate
+window to intercept and print metrics.

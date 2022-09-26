@@ -13,10 +13,9 @@ LIB := $(BUILD)/$(LIB_NAME)
 CFLAGS := -O3 -g -Wall -Werror -I$(SRC)
 CC := gcc
 
+.PHONY: all test perf fake_orch
 
-.PHONY: all test perf
-
-all: $(LIB) test
+all: $(LIB)
 
 # Quickly test whether linked-list implementation is fast enough for
 # our purposes.
@@ -27,21 +26,26 @@ $(BUILD):
 	mkdir -p $(BUILD)
 
 $(LIB): $(SRC)/*.[ch] | $(BUILD)
-	$(CC) $(CFLAGS) -fPIC -shared -Wl,-z,defs -Wl,--as-needed -Wl,-soname,$(LIB_NAME) $(filter *.c, $^) -o $@ -lc
+	$(CC) $(CFLAGS) -fPIC -shared -Wl,-z,defs -Wl,--as-needed -Wl,-soname,$(LIB_NAME) $(filter %.c, $^) -o $@ -lc
 
 clean:
 	$(RM) -rf $(BUILD)
 
-test:
-	$(MAKE) CFLAGS="-DDEBUG -g -I$(SRC)" $(BUILD)/linked_list_test $(BUILD)/curl_test
+TESTPROGS := $(addprefix $(BUILD)/,linked_list_test curl_test)
+
+test: $(LIB)
+	$(MAKE) CFLAGS="-DDEBUG -g -I$(SRC)" $(TESTPROGS)
 	$(BUILD)/linked_list_test
 	LD_AUDIT=$(LIB) $(BUILD)/curl_test
 
-$(BUILD)/linked_list_test: $(TEST)/linked_list_test.c $(SRC)/linked_list.c
+$(BUILD)/linked_list_test: $(TEST)/linked_list_test.c $(SRC)/linked_list.c | $(BUILD)
 	$(CC) $(CFLAGS) $^ -o $@
 
-$(BUILD)/curl_test: $(TEST)/curl_test.c
+$(BUILD)/curl_test: $(TEST)/curl_test.c | $(BUILD)
 	$(CC) $(CFLAGS) $^ -o $@ -lcurl
 
-$(BUILD)/perf: $(TEST)/perf.c $(SRC)/linked_list.c
+$(BUILD)/perf: $(TEST)/perf.c $(SRC)/linked_list.c | $(BUILD)
 	$(CC) $(CFLAGS) $^ -o $@
+
+fake_orch:
+	netcat -kul 51712
