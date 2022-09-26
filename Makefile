@@ -1,29 +1,30 @@
+MAJOR := 1
+MINOR := 0
+
 CFLAGS := -O3 -g -Wall -Werror -Isrc
 CC := gcc
-MAJOR := 0
-MINOR := 1
+
 NAME := metrist-libcurl-agent
 GIT_TAG := $(shell git rev-parse --short HEAD)
 SRC := $(shell pwd)/src
 TEST := $(shell pwd)/test
 BUILD := $(shell pwd)/build
-
 VERSION := $(MAJOR).$(MINOR).$(GIT_TAG)
+LIB_NAME := $(NAME).so.$(VERSION)
+LIB := $(BUILD)/$(LIB_NAME)
 
-.PHONY: all lib clean
+.PHONY: all
 
-all: dirs lib test
+all: $(LIB) test
 
-dirs: build
-	mkdir -p build
+$(BUILD):
+	mkdir -p $(BUILD)
 
-lib: $(NAME).so.$(VERSION)
-
-lib$(NAME).so.$(VERSION): $(NAME).c linked_list.c
-	$(CC) $(CFLAGS) -fPIC -shared -Wl,-z,defs -Wl,--as-needed -Wl,-soname,lib$(NAME).so.$(MAJOR) $^ -o $@ -lc
+$(LIB): $(SRC)/*.[ch] | $(BUILD)
+	$(CC) $(CFLAGS) -fPIC -shared -Wl,-z,defs -Wl,--as-needed -Wl,-soname,$(LIB_NAME) $(filter *.c, $^) -o $@ -lc
 
 clean:
-	$(RM) *.o *.so* linked_list_test curl_test
+	$(RM) -rf $(BUILD)
 
 test:
 	$(MAKE) CFLAGS="-DDEBUG -g" clean lib linked_list_test curl_test
