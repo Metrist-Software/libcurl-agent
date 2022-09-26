@@ -1,9 +1,6 @@
 MAJOR := 1
 MINOR := 0
 
-CFLAGS := -O3 -g -Wall -Werror -Isrc
-CC := gcc
-
 NAME := metrist-libcurl-agent
 GIT_TAG := $(shell git rev-parse --short HEAD)
 SRC := $(shell pwd)/src
@@ -13,9 +10,18 @@ VERSION := $(MAJOR).$(MINOR).$(GIT_TAG)
 LIB_NAME := $(NAME).so.$(VERSION)
 LIB := $(BUILD)/$(LIB_NAME)
 
-.PHONY: all
+CFLAGS := -O3 -g -Wall -Werror -I$(SRC)
+CC := gcc
+
+
+.PHONY: all test perf
 
 all: $(LIB) test
+
+# Quickly test whether linked-list implementation is fast enough for
+# our purposes.
+perf: $(BUILD)/perf
+	$^
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -27,15 +33,15 @@ clean:
 	$(RM) -rf $(BUILD)
 
 test:
-	$(MAKE) CFLAGS="-DDEBUG -g" clean lib linked_list_test curl_test
-	./linked_list_test
-	LD_AUDIT=./lib$(NAME).so.$(VERSION) ./curl_test
+	$(MAKE) CFLAGS="-DDEBUG -g -I$(SRC)" $(BUILD)/linked_list_test $(BUILD)/curl_test
+	$(BUILD)/linked_list_test
+	LD_AUDIT=$(LIB) $(BUILD)/curl_test
 
-linked_list_test: linked_list_test.c linked_list.c
+$(BUILD)/linked_list_test: $(TEST)/linked_list_test.c $(SRC)/linked_list.c
 	$(CC) $(CFLAGS) $^ -o $@
 
-curl_test: curl_test.c
+$(BUILD)/curl_test: $(TEST)/curl_test.c
 	$(CC) $(CFLAGS) $^ -o $@ -lcurl
 
-perf: perf.c linked_list.c
+$(BUILD)/perf: $(TEST)/perf.c $(SRC)/linked_list.c
 	$(CC) $(CFLAGS) $^ -o $@
