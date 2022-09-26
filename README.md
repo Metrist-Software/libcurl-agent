@@ -18,14 +18,24 @@ your regular support channels.
 
 ## Installation
 
-You can obtain the latest binary version from our distribution site:
+If you are running on a supported system, you can obtain the latest binary version from our distribution site. For example,
+for Ubuntu 20.04 ("Focal Fossa"):
 
-... TODO
+    sudo apt install -y gpg curl wget
+    cd /tmp
+    curl https://github.com/Metrist-Software/orchestrator/blob/main/dist/trustedkeys.gpg?raw=true >metrist.gpg
+    latest=$(curl https://dist.metrist.io/agents/libcurl/ubuntu/20.04.x86_64.latest.txt
+    wget https://dist.metrist.io/agents/libcurl/ubuntu/$latest
+    wget https://dist.metrist.io/agents/libcurl/ubuntu/$latest.asc
+    gpg --keyring=metrist.gpg --verify $latest.asc
+    tar xvfz $latest
+    sudo install -m 755 metrist-libcurl-agent.so* /usr/local/lib
 
-or build from source (see below). Install the library in a convenient location and then point to it
+
+or build from source (see below) and then install the library in a convenient location. Point to it
 using the environment variable `LD_AUDIT` before starting the software to be monitored. This will
 cause the Linux loader to load the agent before other libraries and allows it to intercept calls to
-libcurl.
+libcurl. See the Makefile's test target for an example.
 
 ## Configuration
 
@@ -39,15 +49,17 @@ and make sure that the configuration override contains:
 
 ``` sh
 [Service]
-Environment="LD_AUDIT=/opt/canary/libcanary_curl_ipa.so.0.1"
+Environment="LD_AUDIT=/usr/local/lib/metrist-libcurl-agent.so.1.0.69aa742
 ```
+
+(replace the above filename with the actual one you are installing).
 
 Then restart the service and monitoring should commence. There are two more environment
 variables you can use to change where the telemetry data is sent to:
 
 * `METRIST_AGENT_HOST` can be set to an IP4/6 address to send the telemetry data to, the default
   is to send to localhost. Note that due to limitations of what an audit library can do, the use of
-  hostnames is currently not possible here.
+  hostnames is currently not possible here, you must use an IP address.
 * `METRIST_AGENT_PORT` can be set to a port to send the telemetry data to, the default is to
   sent to port 51712.
 

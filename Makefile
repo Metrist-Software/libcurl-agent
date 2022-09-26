@@ -15,7 +15,7 @@ CC := gcc
 
 .PHONY: all test perf fake_orch
 
-all: $(LIB)
+all: $(LIB) test
 
 # Quickly test whether linked-list implementation is fast enough for
 # our purposes.
@@ -49,3 +49,7 @@ $(BUILD)/perf: $(TEST)/perf.c $(SRC)/linked_list.c | $(BUILD)
 
 fake_orch:
 	netcat -kul 51712
+
+# Used during distribution building
+dist: clean $(LIB)
+	echo $(LIB_NAME) >/tmp/libcurl-agent.txt
